@@ -28,6 +28,7 @@ describe('Vyla', () => {
     await expect(source.handleInternal(ctx, 'movie', new TmdbId(550, undefined, undefined))).resolves.toEqual([{
       url: new URL('https://cdn.example.com/fight-club/master.m3u8?token=test'),
       meta: {
+        adaptive: true,
         countryCodes: ['multi'],
         title: 'Fight Club (1999)',
       },
@@ -51,6 +52,7 @@ describe('Vyla', () => {
     await expect(source.handleInternal(ctx, 'series', new TmdbId(60625, 5, 3))).resolves.toEqual([{
       url: new URL('https://cdn.example.com/rick-and-morty/master.m3u8'),
       meta: {
+        adaptive: true,
         countryCodes: ['multi'],
         title: 'Rick and Morty S05E03',
       },

@@ -76,6 +76,7 @@ export class Vyla extends Source {
       return [{
         url,
         meta: {
+          adaptive: true,
           countryCodes: [CountryCode.multi],
           title,
         },
