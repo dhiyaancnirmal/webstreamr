@@ -7,6 +7,7 @@ import { Fastream } from './Fastream';
 import { FileLions } from './FileLions';
 import { FileMoon } from './FileMoon';
 import { Fsst } from './Fsst';
+import { Hls } from './Hls';
 import { HubCloud } from './HubCloud';
 import { HubDrive } from './HubDrive';
 import { KinoGer } from './KinoGer';
@@ -41,6 +42,7 @@ export const createExtractors = (fetcher: Fetcher): Extractor[] => {
     new Fsst(fetcher),
     hubCloud,
     new HubDrive(fetcher, hubCloud),
+    new Hls(fetcher),
     new KinoGer(fetcher),
     new LuluStream(fetcher),
     new Mixdrop(fetcher),

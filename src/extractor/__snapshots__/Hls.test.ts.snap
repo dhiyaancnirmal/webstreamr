@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Hls direct playlist 1`] = `
+[
+  {
+    "format": "hls",
+    "label": "media.example.com",
+    "meta": {
+      "extractorId": "hls",
+    },
+    "ttl": 600000,
+    "url": "https://media.example.com/movie/master.m3u8",
+  },
+]
+`;
