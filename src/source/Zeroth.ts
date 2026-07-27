@@ -39,6 +39,10 @@ interface AdaptiveProvider {
   handleInternal(ctx: Context, type: ContentType, id: Id): Promise<SourceResult[]>;
 }
 
+interface DiscoverySession {
+  cancelled: boolean;
+}
+
 const PROVIDER_ALIASES = [
   'Alpha',
   'Bravo',
@@ -137,12 +141,18 @@ export class Zeroth extends Source {
       return (await Promise.all(resolvedCandidates.map(candidate => this.inspectCandidate(ctx, candidate))))
         .filter((candidate): candidate is Candidate => candidate !== undefined);
     })();
+    const preferredSession: DiscoverySession = { cancelled: false };
     let candidates = await this.collectCandidates([
-      ...this.createProviderTasks(ctx, tmdbId, preferredProviders),
+      ...this.createProviderTasks(ctx, tmdbId, preferredProviders, preferredSession),
       adaptiveProviderTask,
     ]);
+    preferredSession.cancelled = true;
     if (!candidates.length) {
-      candidates = await this.collectCandidates(this.createProviderTasks(ctx, tmdbId, fallbackProviders));
+      const fallbackSession: DiscoverySession = { cancelled: false };
+      candidates = await this.collectCandidates(
+        this.createProviderTasks(ctx, tmdbId, fallbackProviders, fallbackSession),
+      );
+      fallbackSession.cancelled = true;
     }
     candidates
       .sort((left, right) => this.compareCandidates(left, right));
@@ -213,11 +223,16 @@ export class Zeroth extends Source {
     ctx: Context,
     tmdbId: TmdbId,
     providers: string[],
+    session: DiscoverySession,
   ): Promise<Candidate[]>[] {
     let previousTask = Promise.resolve();
 
     return providers.map((provider): Promise<Candidate[]> => {
       const task = previousTask.then(async () => {
+        if (session.cancelled) {
+          return [];
+        }
+
         const resolvedCandidate = await this.resolveProvider(ctx, tmdbId, provider);
         if (!resolvedCandidate) {
           return [];

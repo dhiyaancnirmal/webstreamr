@@ -203,16 +203,21 @@ describe('Zeroth', () => {
   test('return verified candidates without waiting for a stalled provider', async () => {
     jest.useFakeTimers();
     try {
-      jest.spyOn(fetcher, 'json')
+      let resolveStalled!: (value: { ok: boolean }) => void;
+      const stalled = new Promise<{ ok: boolean }>((resolve) => {
+        resolveStalled = resolve;
+      });
+      const json = jest.spyOn(fetcher, 'json')
         .mockResolvedValueOnce({
           fast: {},
           stalled: {},
+          trailing: {},
         })
         .mockResolvedValueOnce({
           ok: true,
           url: 'https://media.example.com/video/720/index.m3u8',
         })
-        .mockImplementationOnce(async () => await new Promise(() => undefined));
+        .mockImplementationOnce(async () => await stalled);
       jest.spyOn(fetcher, 'text').mockResolvedValueOnce(stableVod);
 
       const resultPromise = source.handleInternal(ctx, 'movie', new TmdbId(550, undefined, undefined));
@@ -231,6 +236,10 @@ describe('Zeroth', () => {
           },
         },
       ]);
+      resolveStalled({ ok: false });
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(json).toHaveBeenCalledTimes(3);
     } finally {
       jest.useRealTimers();
     }
