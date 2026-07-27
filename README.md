@@ -70,6 +70,10 @@ You can run the latest WebStreamr via Docker. E.g.
 
 ### Environment variables
 
+#### `BIND_ADDRESS`
+
+Optional. Network address for the HTTP server to listen on. Default: `0.0.0.0`.
+
 #### `CACHE_DIR`
 
 Optional. Directory for persistent caches using SQLite files. Default: OS tmp dir.
