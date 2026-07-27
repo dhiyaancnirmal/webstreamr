@@ -112,14 +112,15 @@ let lastLiveProbeRequestsTimestamp = 0;
 addon.get('/live', async (req: Request, res: Response) => {
   const ctx = contextFromRequestAndResponse(req, res);
 
-  const sources: Source[] = [
-    new HomeCine(fetcher),
-    new MeineCloud(fetcher),
-    new MostraGuarda(fetcher),
-  ];
+  const liveProbeSourceIds = new Set([
+    new HomeCine(fetcher).id,
+    new MeineCloud(fetcher).id,
+    new MostraGuarda(fetcher).id,
+  ]);
+  const liveProbeSources: Source[] = sources.filter(source => liveProbeSourceIds.has(source.id));
   const hrefs = [
-    ...sources.map(source => source.baseUrl),
-    'https://cloudnestra.com',
+    ...liveProbeSources.map(source => source.baseUrl),
+    'https://cloudorchestranova.com',
   ];
 
   const results = new Map<string, string>();
@@ -157,7 +158,7 @@ addon.get('/live', async (req: Request, res: Response) => {
     // TODO: fail health check and try to get a clean IP if infra is ready
     logger.warn('IP might be not clean and leading to blocking.', ctx);
     res.json({ status: 'ok', details });
-  } else if (errorCount === sources.length) {
+  } else if (errorCount === hrefs.length) {
     res.status(503).json({ status: 'error', details });
   } else {
     res.json({ status: 'ok', ipStatus: 'ok', details });

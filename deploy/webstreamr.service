@@ -11,6 +11,7 @@ WorkingDirectory=/home/dhiyaan/src/webstreamr
 Environment=NODE_ENV=production
 Environment=PORT=51546
 Environment=CACHE_DIR=/var/cache/webstreamr
+Environment=DISABLED_SOURCES=mostraguarda
 EnvironmentFile=-/home/dhiyaan/.config/webstreamr/env
 CacheDirectory=webstreamr
 ExecStart=/home/dhiyaan/src/webstreamr/deploy/start-tailscale.sh
