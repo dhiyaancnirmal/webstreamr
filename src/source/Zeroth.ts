@@ -214,15 +214,22 @@ export class Zeroth extends Source {
     tmdbId: TmdbId,
     providers: string[],
   ): Promise<Candidate[]>[] {
-    return providers.map(async (provider): Promise<Candidate[]> => {
-      const resolvedCandidate = await this.resolveProvider(ctx, tmdbId, provider);
-      if (!resolvedCandidate) {
-        return [];
-      }
+    let previousTask = Promise.resolve();
 
-      const candidate = await this.inspectCandidate(ctx, resolvedCandidate);
+    return providers.map((provider): Promise<Candidate[]> => {
+      const task = previousTask.then(async () => {
+        const resolvedCandidate = await this.resolveProvider(ctx, tmdbId, provider);
+        if (!resolvedCandidate) {
+          return [];
+        }
 
-      return candidate ? [candidate] : [];
+        const candidate = await this.inspectCandidate(ctx, resolvedCandidate);
+
+        return candidate ? [candidate] : [];
+      });
+      previousTask = task.then(() => undefined);
+
+      return task;
     });
   }
 

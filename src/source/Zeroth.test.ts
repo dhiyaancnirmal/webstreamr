@@ -60,10 +60,13 @@ describe('Zeroth', () => {
         ok: true,
         url: 'https://b.example.com/master.m3u8',
       });
-    jest.spyOn(fetcher, 'text')
-      .mockResolvedValueOnce(master1080)
-      .mockResolvedValueOnce(master2160)
-      .mockResolvedValue(stableVod);
+    jest.spyOn(fetcher, 'text').mockImplementation(async (_ctx, url) => {
+      if (url.pathname === '/master.m3u8') {
+        return url.hostname === 'a.example.com' ? master1080 : master2160;
+      }
+
+      return stableVod;
+    });
 
     const results = await source.handleInternal(ctx, 'movie', new ImdbId('tt0137523', undefined, undefined));
 
