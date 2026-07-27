@@ -20,6 +20,7 @@ import { StreamKiste } from './StreamKiste';
 import { VerHdLink } from './VerHdLink';
 import { VidKing } from './VidKing';
 import { VidSrc } from './VidSrc';
+import { Vidsuper } from './Vidsuper';
 import { VixSrc } from './VixSrc';
 
 export * from './Source';
@@ -32,6 +33,7 @@ export const createSources = (fetcher: Fetcher): Source[] => {
     new FourKHDHub(fetcher),
     new HDHub4u(fetcher),
     new VidKing(fetcher),
+    new Vidsuper(fetcher),
     new VixSrc(fetcher),
     new VidSrc(),
     new RgShows(fetcher),
