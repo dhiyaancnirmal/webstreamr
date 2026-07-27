@@ -72,6 +72,7 @@ const PROVIDER_INDEX_TIMEOUT = 1500;
 const PROVIDER_RESOLVE_TIMEOUT = 1500;
 const PLAYLIST_TIMEOUT = 2000;
 const CANDIDATE_COLLECTION_TIMEOUT = 4000;
+const ADAPTIVE_SETTLE_WINDOW = 500;
 
 export class Zeroth extends Source {
   public readonly id = 'zeroth';
@@ -312,21 +313,31 @@ export class Zeroth extends Source {
 
   private isStableVodPlaylist(playlist: string): boolean {
     return playlist.trimStart().startsWith('#EXTM3U')
-      && playlist.includes('#EXT-X-PLAYLIST-TYPE:VOD')
       && playlist.includes('#EXT-X-ENDLIST');
   }
 
   private async collectCandidates(tasks: Promise<Candidate[]>[]): Promise<Candidate[]> {
     const candidates: Candidate[] = [];
     let timeout!: ReturnType<typeof setTimeout>;
+    let resolveAdaptiveCandidate!: () => void;
+    const adaptiveCandidate = new Promise<void>((resolve) => {
+      resolveAdaptiveCandidate = resolve;
+    });
     const settled = Promise.allSettled(tasks.map(async (task) => {
-      candidates.push(...await task);
+      const taskCandidates = await task;
+      candidates.push(...taskCandidates);
+      if (taskCandidates.some(candidate => candidate.adaptiveSafe)) {
+        resolveAdaptiveCandidate();
+      }
     }));
     const deadline = new Promise<void>((resolve) => {
       timeout = setTimeout(resolve, CANDIDATE_COLLECTION_TIMEOUT);
     });
+    const adaptiveSettleWindow = adaptiveCandidate.then(async () => await new Promise<void>((resolve) => {
+      setTimeout(resolve, ADAPTIVE_SETTLE_WINDOW);
+    }));
 
-    await Promise.race([settled, deadline]);
+    await Promise.race([settled, deadline, adaptiveSettleWindow]);
     clearTimeout(timeout);
 
     return [...candidates];

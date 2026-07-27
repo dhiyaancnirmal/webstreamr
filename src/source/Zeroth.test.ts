@@ -19,7 +19,6 @@ const master2160 = `#EXTM3U
 `;
 
 const stableVod = `#EXTM3U
-#EXT-X-PLAYLIST-TYPE:VOD
 #EXTINF:6,
 segment.ts
 #EXT-X-ENDLIST
