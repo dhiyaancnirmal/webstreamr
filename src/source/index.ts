@@ -22,18 +22,20 @@ import { VidKing } from './VidKing';
 import { VidSrc } from './VidSrc';
 import { Vidsuper } from './Vidsuper';
 import { VixSrc } from './VixSrc';
+import { Vyla } from './Vyla';
 
 export * from './Source';
 
 export const createSources = (fetcher: Fetcher): Source[] => {
   const disabledSources = envGet('DISABLED_SOURCES')?.split(',') ?? [];
+  const vylaBaseUrl = envGet('VYLA_BASE_URL');
 
   return [
     // multi
     new FourKHDHub(fetcher),
     new HDHub4u(fetcher),
     new VidKing(fetcher),
-    new Vidsuper(fetcher),
+    ...(vylaBaseUrl ? [new Vyla(fetcher, vylaBaseUrl)] : [new Vidsuper(fetcher)]),
     new VixSrc(fetcher),
     new VidSrc(),
     new RgShows(fetcher),
