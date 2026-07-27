@@ -221,7 +221,7 @@ describe('Zeroth', () => {
       jest.spyOn(fetcher, 'text').mockResolvedValueOnce(stableVod);
 
       const resultPromise = source.handleInternal(ctx, 'movie', new TmdbId(550, undefined, undefined));
-      await jest.advanceTimersByTimeAsync(4000);
+      await jest.advanceTimersByTimeAsync(20000);
 
       await expect(resultPromise).resolves.toEqual([
         {

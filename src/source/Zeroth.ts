@@ -82,10 +82,10 @@ const PREFERRED_PROVIDERS = new Set([
   'vixsrc',
 ]);
 const PROVIDER_INDEX_TIMEOUT = 1500;
-const PROVIDER_RESOLVE_TIMEOUT = 1500;
-const PLAYLIST_TIMEOUT = 2000;
-const CANDIDATE_COLLECTION_TIMEOUT = 4000;
-const ADAPTIVE_SETTLE_WINDOW = 500;
+const PROVIDER_RESOLVE_TIMEOUT = 15000;
+const PLAYLIST_TIMEOUT = 5000;
+const CANDIDATE_COLLECTION_TIMEOUT = 20000;
+const CANDIDATE_SETTLE_WINDOW = 500;
 
 export class Zeroth extends Source {
   public readonly id = 'zeroth';
@@ -147,7 +147,7 @@ export class Zeroth extends Source {
       adaptiveProviderTask,
     ]);
     preferredSession.cancelled = true;
-    if (!candidates.length) {
+    if (!candidates.length && !preferredProviders.length) {
       const fallbackSession: DiscoverySession = { cancelled: false };
       candidates = await this.collectCandidates(
         this.createProviderTasks(ctx, tmdbId, fallbackProviders, fallbackSession),
@@ -366,25 +366,25 @@ export class Zeroth extends Source {
   private async collectCandidates(tasks: Promise<Candidate[]>[]): Promise<Candidate[]> {
     const candidates: Candidate[] = [];
     let timeout!: ReturnType<typeof setTimeout>;
-    let resolveAdaptiveCandidate!: () => void;
-    const adaptiveCandidate = new Promise<void>((resolve) => {
-      resolveAdaptiveCandidate = resolve;
+    let resolveCandidate!: () => void;
+    const candidate = new Promise<void>((resolve) => {
+      resolveCandidate = resolve;
     });
     const settled = Promise.allSettled(tasks.map(async (task) => {
       const taskCandidates = await task;
       candidates.push(...taskCandidates);
-      if (taskCandidates.some(candidate => candidate.adaptiveSafe)) {
-        resolveAdaptiveCandidate();
+      if (taskCandidates.length) {
+        resolveCandidate();
       }
     }));
     const deadline = new Promise<void>((resolve) => {
       timeout = setTimeout(resolve, CANDIDATE_COLLECTION_TIMEOUT);
     });
-    const adaptiveSettleWindow = adaptiveCandidate.then(async () => await new Promise<void>((resolve) => {
-      setTimeout(resolve, ADAPTIVE_SETTLE_WINDOW);
+    const candidateSettleWindow = candidate.then(async () => await new Promise<void>((resolve) => {
+      setTimeout(resolve, CANDIDATE_SETTLE_WINDOW);
     }));
 
-    await Promise.race([settled, deadline, adaptiveSettleWindow]);
+    await Promise.race([settled, deadline, candidateSettleWindow]);
     clearTimeout(timeout);
 
     return [...candidates];
