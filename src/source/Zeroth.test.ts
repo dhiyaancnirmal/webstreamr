@@ -198,6 +198,42 @@ describe('Zeroth', () => {
     await expect(source.handleInternal(ctx, 'movie', new TmdbId(550, undefined, undefined))).resolves.toEqual([]);
   });
 
+  test('return verified candidates without waiting for a stalled provider', async () => {
+    jest.useFakeTimers();
+    try {
+      jest.spyOn(fetcher, 'json')
+        .mockResolvedValueOnce({
+          fast: {},
+          stalled: {},
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          url: 'https://media.example.com/video/720/index.m3u8',
+        })
+        .mockImplementationOnce(async () => await new Promise(() => undefined));
+      jest.spyOn(fetcher, 'text').mockResolvedValueOnce(stableVod);
+
+      const resultPromise = source.handleInternal(ctx, 'movie', new TmdbId(550, undefined, undefined));
+      await jest.advanceTimersByTimeAsync(4000);
+
+      await expect(resultPromise).resolves.toEqual([
+        {
+          url: new URL('https://media.example.com/video/720/index.m3u8'),
+          meta: {
+            countryCodes: ['multi'],
+            displayLabel: 'Alpha',
+            format: 'hls',
+            height: 720,
+            priority: 1000,
+            title: 'TMDB 550',
+          },
+        },
+      ]);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   test('deduplicate same-height variants by bandwidth and ignore malformed entries', async () => {
     jest.spyOn(fetcher, 'json')
       .mockResolvedValueOnce({ provider: {} })

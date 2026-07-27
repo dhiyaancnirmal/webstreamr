@@ -68,6 +68,11 @@ const PROVIDER_ALIASES = [
   'Zulu',
 ] as const;
 
+const PROVIDER_INDEX_TIMEOUT = 1500;
+const PROVIDER_RESOLVE_TIMEOUT = 1500;
+const PLAYLIST_TIMEOUT = 2000;
+const CANDIDATE_COLLECTION_TIMEOUT = 4000;
+
 export class Zeroth extends Source {
   public readonly id = 'zeroth';
 
@@ -103,7 +108,7 @@ export class Zeroth extends Source {
     try {
       providerList = await this.fetcher.json(ctx, new URL('/api/test', `${this.baseUrl}/`), {
         noProxyHeaders: true,
-        timeout: 8000,
+        timeout: PROVIDER_INDEX_TIMEOUT,
       }) as unknown;
     } catch {
       providerList = {};
@@ -114,16 +119,23 @@ export class Zeroth extends Source {
           .filter(provider => /^[a-z0-9-]+$/.test(provider))
           .sort()
       : [];
-    const [resolvedCandidates, adaptiveProviderCandidates] = await Promise.all([
-      Promise.all(providers.map(provider => this.resolveProvider(ctx, tmdbId, provider))),
-      this.resolveAdaptiveProvider(ctx, type, id),
-    ]);
-    const candidates = (await Promise.all(
-      [...resolvedCandidates, ...adaptiveProviderCandidates]
-        .filter((candidate): candidate is RawCandidate => candidate !== undefined)
-        .map(candidate => this.inspectCandidate(ctx, candidate)),
-    ))
-      .filter((candidate): candidate is Candidate => candidate !== undefined)
+    const providerTasks = providers.map(async (provider): Promise<Candidate[]> => {
+      const resolvedCandidate = await this.resolveProvider(ctx, tmdbId, provider);
+      if (!resolvedCandidate) {
+        return [];
+      }
+
+      const candidate = await this.inspectCandidate(ctx, resolvedCandidate);
+
+      return candidate ? [candidate] : [];
+    });
+    const adaptiveProviderTask = (async (): Promise<Candidate[]> => {
+      const resolvedCandidates = await this.resolveAdaptiveProvider(ctx, type, id);
+
+      return (await Promise.all(resolvedCandidates.map(candidate => this.inspectCandidate(ctx, candidate))))
+        .filter((candidate): candidate is Candidate => candidate !== undefined);
+    })();
+    const candidates = (await this.collectCandidates([...providerTasks, adaptiveProviderTask]))
       .sort((left, right) => this.compareCandidates(left, right));
 
     if (!candidates.length) {
@@ -204,7 +216,7 @@ export class Zeroth extends Source {
     try {
       response = await this.fetcher.json(ctx, apiUrl, {
         noProxyHeaders: true,
-        timeout: 15000,
+        timeout: PROVIDER_RESOLVE_TIMEOUT,
       }) as ResolverResponse;
     } catch {
       return undefined;
@@ -250,7 +262,7 @@ export class Zeroth extends Source {
     try {
       playlist = await this.fetcher.text(ctx, candidate.url, {
         noProxyHeaders: true,
-        timeout: 10000,
+        timeout: PLAYLIST_TIMEOUT,
       });
     } catch {
       return undefined;
@@ -289,7 +301,7 @@ export class Zeroth extends Source {
       const playlist = await this.fetcher.text(ctx, variant.url, {
         ...(referer && { headers: { Referer: referer } }),
         noProxyHeaders: true,
-        timeout: 8000,
+        timeout: PLAYLIST_TIMEOUT,
       });
 
       return this.isStableVodPlaylist(playlist) ? variant : undefined;
@@ -302,6 +314,22 @@ export class Zeroth extends Source {
     return playlist.trimStart().startsWith('#EXTM3U')
       && playlist.includes('#EXT-X-PLAYLIST-TYPE:VOD')
       && playlist.includes('#EXT-X-ENDLIST');
+  }
+
+  private async collectCandidates(tasks: Promise<Candidate[]>[]): Promise<Candidate[]> {
+    const candidates: Candidate[] = [];
+    let timeout!: ReturnType<typeof setTimeout>;
+    const settled = Promise.allSettled(tasks.map(async (task) => {
+      candidates.push(...await task);
+    }));
+    const deadline = new Promise<void>((resolve) => {
+      timeout = setTimeout(resolve, CANDIDATE_COLLECTION_TIMEOUT);
+    });
+
+    await Promise.race([settled, deadline]);
+    clearTimeout(timeout);
+
+    return [...candidates];
   }
 
   private parseVariants(playlist: string, baseUrl: URL): Variant[] {
