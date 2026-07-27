@@ -13,3 +13,19 @@ exports[`Hls direct playlist 1`] = `
   },
 ]
 `;
+
+exports[`Hls source-declared playlist without a file extension 1`] = `
+[
+  {
+    "format": "hls",
+    "label": "media.example.com",
+    "meta": {
+      "adaptive": true,
+      "extractorId": "hls",
+      "format": "hls",
+    },
+    "ttl": 600000,
+    "url": "https://media.example.com/api/proxy/hls",
+  },
+]
+`;

@@ -1,5 +1,6 @@
 import winston from 'winston';
 import { createTestContext } from '../test';
+import { Format } from '../types';
 import { FetcherMock } from '../utils';
 import { ExtractorRegistry } from './ExtractorRegistry';
 import { Hls } from './Hls';
@@ -12,5 +13,13 @@ const ctx = createTestContext();
 describe('Hls', () => {
   test('direct playlist', async () => {
     expect(await extractorRegistry.handle(ctx, new URL('https://media.example.com/movie/master.m3u8'))).toMatchSnapshot();
+  });
+
+  test('source-declared playlist without a file extension', async () => {
+    expect(await extractorRegistry.handle(
+      ctx,
+      new URL('https://media.example.com/api/proxy/hls'),
+      { adaptive: true, format: Format.hls },
+    )).toMatchSnapshot();
   });
 });

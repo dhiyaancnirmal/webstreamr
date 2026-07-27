@@ -1,6 +1,6 @@
 import { ContentType } from 'stremio-addon-sdk';
 import { NotFoundError } from '../error';
-import { Context, CountryCode } from '../types';
+import { Context, CountryCode, Format } from '../types';
 import { Fetcher, Id, TmdbId } from '../utils';
 import { Source, SourceResult } from './Source';
 
@@ -73,7 +73,7 @@ export class Vyla extends Source {
       } catch {
         continue;
       }
-      if (url.protocol !== 'https:' || !url.pathname.toLowerCase().endsWith('.m3u8')) {
+      if (url.protocol !== 'https:') {
         continue;
       }
 
@@ -86,6 +86,7 @@ export class Vyla extends Source {
         meta: {
           adaptive: true,
           countryCodes: [CountryCode.multi],
+          format: Format.hls,
           title,
         },
       }];

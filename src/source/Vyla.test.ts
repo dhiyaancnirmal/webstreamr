@@ -32,6 +32,7 @@ describe('Vyla', () => {
       meta: {
         adaptive: true,
         countryCodes: ['multi'],
+        format: 'hls',
         title: 'Fight Club (1999)',
       },
     }]);
@@ -51,14 +52,15 @@ describe('Vyla', () => {
       .mockRejectedValueOnce(new Error('vidapi unavailable'))
       .mockResolvedValueOnce({
         ok: true,
-        url: 'https://cdn.example.com/rick-and-morty/master.m3u8',
+        url: 'https://embed.vidrift.in/api/proxy/hls?token=test',
       });
 
     await expect(source.handleInternal(ctx, 'series', new ImdbId('tt2861424', 5, 3))).resolves.toEqual([{
-      url: new URL('https://cdn.example.com/rick-and-morty/master.m3u8'),
+      url: new URL('https://embed.vidrift.in/api/proxy/hls?token=test'),
       meta: {
         adaptive: true,
         countryCodes: ['multi'],
+        format: 'hls',
         title: 'Rick and Morty S05E03',
       },
     }]);
@@ -88,6 +90,7 @@ describe('Vyla', () => {
       meta: {
         adaptive: true,
         countryCodes: ['multi'],
+        format: 'hls',
         title: 'TMDB 550',
       },
     }]);

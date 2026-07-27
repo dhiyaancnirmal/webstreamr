@@ -19,7 +19,7 @@ export abstract class Extractor {
     this.fetcher = fetcher;
   }
 
-  public abstract supports(ctx: Context, url: URL): boolean;
+  public abstract supports(ctx: Context, url: URL, meta?: Meta): boolean;
 
   public normalize(url: URL): URL {
     return url;

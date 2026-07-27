@@ -80,6 +80,7 @@ export interface Meta {
   bytes?: number | undefined;
   countryCodes?: CountryCode[];
   extractorId?: string | undefined;
+  format?: Format | undefined;
   height?: number | undefined;
   priority?: number | undefined;
   referer?: string | undefined;

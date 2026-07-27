@@ -8,8 +8,8 @@ export class Hls extends Extractor {
 
   public override readonly ttl = 600000; // 10m
 
-  public supports(_ctx: Context, url: URL): boolean {
-    return url.pathname.toLowerCase().endsWith('.m3u8');
+  public supports(_ctx: Context, url: URL, meta?: Meta): boolean {
+    return url.pathname.toLowerCase().endsWith('.m3u8') || meta?.format === Format.hls;
   };
 
   protected async extractInternal(_ctx: Context, url: URL, meta: Meta): Promise<InternalUrlResult[]> {
