@@ -2,6 +2,7 @@ import { ContentType } from 'stremio-addon-sdk';
 import winston from 'winston';
 import { BlockedError, HttpError, NotFoundError, QueueIsFullError, TimeoutError, TooManyRequestsError, TooManyTimeoutsError } from '../error';
 import { createExtractors, Extractor, ExtractorRegistry } from '../extractor';
+import { Hls } from '../extractor/Hls';
 import { HubCloud } from '../extractor/HubCloud';
 import { RgShows as RgShowsExtractor } from '../extractor/RgShows';
 import { VidSrc as VidSrcExtractor } from '../extractor/VidSrc';
@@ -11,6 +12,7 @@ import { FourKHDHub } from '../source/FourKHDHub';
 import { MeineCloud } from '../source/MeineCloud';
 import { MostraGuarda } from '../source/MostraGuarda';
 import { RgShows } from '../source/RgShows';
+import { VidKing } from '../source/VidKing';
 import { VidSrc } from '../source/VidSrc';
 import { VixSrc } from '../source/VixSrc';
 import { createTestContext } from '../test';
@@ -96,6 +98,22 @@ describe('resolve', () => {
     const streamResolver = new StreamResolver(logger, new ExtractorRegistry(logger, [new RgShowsExtractor(fetcher), new VixSrcExtractor(fetcher)]));
 
     const streams = await streamResolver.resolve(createTestContext(), [new RgShows(fetcher), new VixSrc(fetcher)], 'series', new TmdbId(2190, 26, 2));
+    expect(streams.streams).toMatchSnapshot();
+  });
+
+  test('combines VidKing renditions into one adaptive HLS stream', async () => {
+    const vidKingFetcher = new FetcherMock(`${__dirname}/../source/__fixtures__/VidKing`);
+    const streamResolver = new StreamResolver(logger, new ExtractorRegistry(logger, [new Hls(vidKingFetcher)]));
+    const vidKing = new VidKing(vidKingFetcher, () => 1785141418704);
+
+    const streams = await streamResolver.resolve(
+      createTestContext({ multi: 'on' }),
+      [vidKing],
+      'movie',
+      new ImdbId('tt0137523', undefined, undefined),
+    );
+
+    expect(streams.streams).toHaveLength(1);
     expect(streams.streams).toMatchSnapshot();
   });
 

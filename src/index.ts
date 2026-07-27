@@ -6,7 +6,7 @@ import express, { NextFunction, Request, Response } from 'express';
 // eslint-disable-next-line import/no-named-as-default
 import rateLimit from 'express-rate-limit';
 import winston from 'winston';
-import { ConfigureController, ExtractController, ManifestController, StreamController } from './controller';
+import { AdaptiveHlsController, ConfigureController, ExtractController, ManifestController, StreamController } from './controller';
 import { BlockedError, logErrorAndReturnNiceString } from './error';
 import { createExtractors, ExtractorRegistry } from './extractor';
 import { createSources, Source } from './source';
@@ -83,6 +83,7 @@ addon.use((req: Request, res: Response, next: NextFunction) => {
 const extractorRegistry = new ExtractorRegistry(logger, extractors);
 
 addon.use('/', (new ExtractController(logger, fetcher, extractorRegistry)).router);
+addon.use('/', (new AdaptiveHlsController()).router);
 addon.use('/', (new ConfigureController(sources, extractors)).router);
 addon.use('/', (new ManifestController(sources, extractors)).router);
 

@@ -142,12 +142,15 @@ export class StreamResolver {
     const errorCount = urlResults.reduce((count, urlResult) => urlResult.error ? count + 1 : count, sourceErrorCount);
     this.logger.info(`Got ${urlResults.length} url results, including ${errorCount} errors`, ctx);
 
+    const visibleUrlResults = urlResults.filter(urlResult => (!urlResult.error || showErrors(ctx.config)) && !isResolutionExcluded(ctx.config, getClosestResolution(urlResult.meta?.height)))
+      .filter((urlResult, index, self) =>
+        // Remove duplicate URLs
+        index === self.findIndex(t => t.url.href === urlResult.url.href),
+      );
+    const combinedUrlResults = this.combineAdaptiveHls(ctx, visibleUrlResults);
+
     streams.push(
-      ...urlResults.filter(urlResult => (!urlResult.error || showErrors(ctx.config)) && !isResolutionExcluded(ctx.config, getClosestResolution(urlResult.meta?.height)))
-        .filter((urlResult, index, self) =>
-          // Remove duplicate URLs
-          index === self.findIndex(t => t.url.href === urlResult.url.href),
-        )
+      ...combinedUrlResults
         .map(urlResult => ({
           ...this.buildUrl(urlResult),
           name: this.buildName(ctx, urlResult),
@@ -174,6 +177,39 @@ export class StreamResolver {
 
   private arraysIntersect<T>(arr1: T[], arr2: T[]): boolean {
     return arr1.filter(item => arr2.includes(item)).length > 0;
+  }
+
+  private combineAdaptiveHls(ctx: Context, urlResults: UrlResult[]): UrlResult[] {
+    const variants = urlResults.filter(urlResult =>
+      urlResult.meta?.sourceId === 'vidking'
+      && urlResult.format === Format.hls
+      && !urlResult.error
+      && urlResult.meta.height,
+    );
+    if (variants.length < 2) {
+      return urlResults;
+    }
+
+    const encodedVariants = Buffer.from(JSON.stringify(variants.map(variant => ({
+      height: variant.meta?.height,
+      url: variant.url.href,
+    })))).toString('base64url');
+    const representative = variants[0] as UrlResult;
+    const meta = { ...representative.meta, adaptive: true };
+    delete meta.height;
+
+    const adaptiveResult: UrlResult = {
+      ...representative,
+      url: new URL(`/adaptive-hls/${encodedVariants}.m3u8`, ctx.hostUrl),
+      label: 'Adaptive HLS',
+      meta,
+      ttl: Math.min(...variants.map(variant => variant.ttl)),
+    };
+
+    return [
+      ...urlResults.filter(urlResult => !variants.includes(urlResult)),
+      adaptiveResult,
+    ];
   }
 
   private determineTtl(urlResults: UrlResult[]): number | undefined {
@@ -204,7 +240,9 @@ export class StreamResolver {
       name += ` ${flagFromCountryCode(countryCode)}`;
     });
 
-    if (urlResult.meta?.height) {
+    if (urlResult.meta?.adaptive) {
+      name += ' Auto';
+    } else if (urlResult.meta?.height) {
       name += ` ${getClosestResolution(urlResult.meta.height)}`;
     }
 

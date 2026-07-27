@@ -180,6 +180,21 @@ exports[`resolve adds error info 2`] = `
 }
 `;
 
+exports[`resolve combines VidKing renditions into one adaptive HLS stream 1`] = `
+[
+  {
+    "behaviorHints": {
+      "bingeGroup": "webstreamr-vidking-hls-multi",
+      "notWebReady": true,
+    },
+    "name": "WebStreamr 🌐 Auto",
+    "title": "Fight Club (1999) · Yoru
+🔗 Adaptive HLS from VidKing",
+    "url": "http://localhost/adaptive-hls/W3siaGVpZ2h0IjoyMTYwLCJ1cmwiOiJodHRwczovL21vb24uaXJvbndhbGxuZXQubmV0L3ZkL09YTjNkMHc1UTFweVZHTm1WRk5tWkZwTGVFUmhRVG8wVlRkQ2VXdFhNMlEyVUVKeWIyTTVibTkxVW5oQi9pbmRleC1zMjE2MHAtdjEtYTEubTN1OCJ9LHsiaGVpZ2h0IjoxMDgwLCJ1cmwiOiJodHRwczovL21vb24uaXJvbndhbGxuZXQubmV0L3ZkL09YTjNkMHc1UTFweVZHTm1WRk5tWkZwTGVFUmhRVG8wVlRkQ2VXdFhNMlEyVUVKeWIyTTVibTkxVW5oQi9pbmRleC1zMTA4MHAtdjEtYTEubTN1OCJ9LHsiaGVpZ2h0Ijo3MjAsInVybCI6Imh0dHBzOi8vbW9vbi5pcm9ud2FsbG5ldC5uZXQvdmQvT1hOM2QwdzVRMXB5VkdObVZGTm1aRnBMZUVSaFFUbzBWVGRDZVd0WE0yUTJVRUp5YjJNNWJtOTFVbmhCL2luZGV4LXM3MjBwLXYxLWExLm0zdTgifSx7ImhlaWdodCI6NDgwLCJ1cmwiOiJodHRwczovL21vb24uaXJvbndhbGxuZXQubmV0L3ZkL09YTjNkMHc1UTFweVZHTm1WRk5tWkZwTGVFUmhRVG8wVlRkQ2VXdFhNMlEyVUVKeWIyTTVibTkxVW5oQi9pbmRleC1zNDgwcC12MS1hMS5tM3U4In1d.m3u8",
+  },
+]
+`;
+
 exports[`resolve ignores not found errors 1`] = `
 {
   "streams": [],
