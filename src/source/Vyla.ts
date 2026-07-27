@@ -1,7 +1,16 @@
 import { ContentType } from 'stremio-addon-sdk';
+import { NotFoundError } from '../error';
 import { Context, CountryCode } from '../types';
-import { Fetcher, getTmdbId, getTmdbNameAndYear, Id } from '../utils';
+import { Fetcher, Id, TmdbId } from '../utils';
 import { Source, SourceResult } from './Source';
+
+interface CinemetaResponse {
+  meta?: {
+    moviedb_id?: unknown;
+    name?: unknown;
+    releaseInfo?: unknown;
+  };
+}
 
 interface VylaTestResponse {
   ok?: unknown;
@@ -35,8 +44,7 @@ export class Vyla extends Source {
   }
 
   public async handleInternal(ctx: Context, _type: ContentType, id: Id): Promise<SourceResult[]> {
-    const tmdbId = await getTmdbId(ctx, this.fetcher, id);
-    const [name, year] = await getTmdbNameAndYear(ctx, this.fetcher, tmdbId);
+    const [tmdbId, name, year] = await this.getMetadata(ctx, id);
 
     for (const provider of PROVIDERS) {
       const apiUrl = new URL(`/api/test/${tmdbId.id}`, `${this.baseUrl}/`);
@@ -71,7 +79,7 @@ export class Vyla extends Source {
 
       const title = tmdbId.season
         ? `${name} ${tmdbId.formatSeasonAndEpisode()}`
-        : `${name} (${year})`;
+        : year ? `${name} (${year})` : name;
 
       return [{
         url,
@@ -84,5 +92,31 @@ export class Vyla extends Source {
     }
 
     return [];
+  }
+
+  private async getMetadata(ctx: Context, id: Id): Promise<[TmdbId, string, number | undefined]> {
+    if (id instanceof TmdbId) {
+      return [id, `TMDB ${id.id}`, undefined];
+    }
+
+    const type = id.season ? 'series' : 'movie';
+    const metadataUrl = new URL(`/meta/${type}/${id.id}.json`, 'https://v3-cinemeta.strem.io');
+    const response = await this.fetcher.json(ctx, metadataUrl, {
+      noProxyHeaders: true,
+      timeout: 8000,
+    }) as CinemetaResponse;
+    if (
+      typeof response.meta?.moviedb_id !== 'number'
+      || typeof response.meta.name !== 'string'
+      || typeof response.meta.releaseInfo !== 'string'
+    ) {
+      throw new NotFoundError(`Could not get Cinemeta metadata for IMDb ID "${id.id}"`);
+    }
+
+    return [
+      new TmdbId(response.meta.moviedb_id, id.season, id.episode),
+      response.meta.name,
+      parseInt(response.meta.releaseInfo.slice(0, 4)),
+    ];
   }
 }
