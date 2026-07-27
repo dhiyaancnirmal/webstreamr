@@ -101,7 +101,7 @@ describe('resolve', () => {
     expect(streams.streams).toMatchSnapshot();
   });
 
-  test('combines VidKing renditions into one adaptive HLS stream', async () => {
+  test('selects one stable VidKing rendition', async () => {
     const vidKingFetcher = new FetcherMock(`${__dirname}/../source/__fixtures__/VidKing`);
     const streamResolver = new StreamResolver(logger, new ExtractorRegistry(logger, [new Hls(vidKingFetcher)]));
     const vidKing = new VidKing(vidKingFetcher, () => 1785141418704);
@@ -115,6 +115,43 @@ describe('resolve', () => {
 
     expect(streams.streams).toHaveLength(1);
     expect(streams.streams).toMatchSnapshot();
+  });
+
+  test('selects the highest VidKing rendition when 1080p is unavailable', async () => {
+    class MockVidKing extends Source {
+      public readonly id = 'vidking';
+
+      public readonly label = 'VidKing';
+
+      public readonly contentTypes: ContentType[] = ['movie'];
+
+      public readonly countryCodes: CountryCode[] = [CountryCode.multi];
+
+      public readonly baseUrl = 'https://www.vidking.net';
+
+      protected readonly handleInternal = async (): Promise<SourceResult[]> => [
+        {
+          url: new URL('https://media.example.com/480p.m3u8'),
+          meta: { countryCodes: [CountryCode.multi], height: 480 },
+        },
+        {
+          url: new URL('https://media.example.com/720p.m3u8'),
+          meta: { countryCodes: [CountryCode.multi], height: 720 },
+        },
+      ];
+    }
+
+    const streamResolver = new StreamResolver(logger, new ExtractorRegistry(logger, [new Hls(fetcher)]));
+    const streams = await streamResolver.resolve(
+      createTestContext({ multi: 'on' }),
+      [new MockVidKing()],
+      'movie',
+      new ImdbId('tt0000001', undefined, undefined),
+    );
+
+    expect(streams.streams).toHaveLength(1);
+    expect(streams.streams[0]?.name).toBe('WebStreamr 🌐 720p');
+    expect(streams.streams[0]?.url).toBe('https://media.example.com/720p.m3u8');
   });
 
   test('adds error info', async () => {

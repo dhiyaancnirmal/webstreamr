@@ -147,7 +147,7 @@ export class StreamResolver {
         // Remove duplicate URLs
         index === self.findIndex(t => t.url.href === urlResult.url.href),
       );
-    const combinedUrlResults = this.combineAdaptiveHls(ctx, visibleUrlResults);
+    const combinedUrlResults = this.selectVidKingRendition(visibleUrlResults);
 
     streams.push(
       ...combinedUrlResults
@@ -179,7 +179,7 @@ export class StreamResolver {
     return arr1.filter(item => arr2.includes(item)).length > 0;
   }
 
-  private combineAdaptiveHls(ctx: Context, urlResults: UrlResult[]): UrlResult[] {
+  private selectVidKingRendition(urlResults: UrlResult[]): UrlResult[] {
     const variants = urlResults.filter(urlResult =>
       urlResult.meta?.sourceId === 'vidking'
       && urlResult.format === Format.hls
@@ -190,25 +190,11 @@ export class StreamResolver {
       return urlResults;
     }
 
-    const encodedVariants = Buffer.from(JSON.stringify(variants.map(variant => ({
-      height: variant.meta?.height,
-      url: variant.url.href,
-    })))).toString('base64url');
-    const representative = variants[0] as UrlResult;
-    const meta = { ...representative.meta, adaptive: true };
-    delete meta.height;
-
-    const adaptiveResult: UrlResult = {
-      ...representative,
-      url: new URL(`/adaptive-hls/${encodedVariants}.m3u8`, ctx.hostUrl),
-      label: 'Adaptive HLS',
-      meta,
-      ttl: Math.min(...variants.map(variant => variant.ttl)),
-    };
+    const selectedVariant = variants.find(variant => variant.meta?.height === 1080) ?? variants[0] as UrlResult;
 
     return [
       ...urlResults.filter(urlResult => !variants.includes(urlResult)),
-      adaptiveResult,
+      selectedVariant,
     ];
   }
 
@@ -240,9 +226,7 @@ export class StreamResolver {
       name += ` ${flagFromCountryCode(countryCode)}`;
     });
 
-    if (urlResult.meta?.adaptive) {
-      name += ' Auto';
-    } else if (urlResult.meta?.height) {
+    if (urlResult.meta?.height) {
       name += ` ${getClosestResolution(urlResult.meta.height)}`;
     }
 
