@@ -119,3 +119,7 @@ Free Webshare proxies seem to work with it.
 #### `TMDB_ACCESS_TOKEN`
 
 **Required**. TMDB access token to get information like title and year for content. Use the [API Read Access Token](https://www.themoviedb.org/settings/api).
+
+## Debian service
+
+The files in [`deploy`](deploy) run WebStreamr as an unprivileged systemd service bound to the machine's Tailscale IPv4 address. Optional secrets and environment overrides can be placed in `/home/dhiyaan/.config/webstreamr/env`.

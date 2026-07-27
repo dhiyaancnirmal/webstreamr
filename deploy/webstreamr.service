@@ -1,0 +1,37 @@
+[Unit]
+Description=WebStreamr Stremio add-on
+After=network-online.target tailscaled.service
+Wants=network-online.target tailscaled.service
+
+[Service]
+Type=simple
+User=dhiyaan
+Group=dhiyaan
+WorkingDirectory=/home/dhiyaan/src/webstreamr
+Environment=NODE_ENV=production
+Environment=PORT=51546
+Environment=CACHE_DIR=/var/cache/webstreamr
+EnvironmentFile=-/home/dhiyaan/.config/webstreamr/env
+CacheDirectory=webstreamr
+ExecStart=/home/dhiyaan/src/webstreamr/deploy/start-tailscale.sh
+Restart=on-failure
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=read-only
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target
