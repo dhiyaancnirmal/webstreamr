@@ -68,6 +68,15 @@ const PROVIDER_ALIASES = [
   'Zulu',
 ] as const;
 
+const PREFERRED_PROVIDERS = new Set([
+  'meowtv',
+  'vidapi',
+  'vidcore',
+  'vidfast',
+  'vidrift',
+  'vidup',
+  'vixsrc',
+]);
 const PROVIDER_INDEX_TIMEOUT = 1500;
 const PROVIDER_RESOLVE_TIMEOUT = 1500;
 const PLAYLIST_TIMEOUT = 2000;
@@ -120,23 +129,22 @@ export class Zeroth extends Source {
           .filter(provider => /^[a-z0-9-]+$/.test(provider))
           .sort()
       : [];
-    const providerTasks = providers.map(async (provider): Promise<Candidate[]> => {
-      const resolvedCandidate = await this.resolveProvider(ctx, tmdbId, provider);
-      if (!resolvedCandidate) {
-        return [];
-      }
-
-      const candidate = await this.inspectCandidate(ctx, resolvedCandidate);
-
-      return candidate ? [candidate] : [];
-    });
+    const preferredProviders = providers.filter(provider => PREFERRED_PROVIDERS.has(provider));
+    const fallbackProviders = providers.filter(provider => !PREFERRED_PROVIDERS.has(provider));
     const adaptiveProviderTask = (async (): Promise<Candidate[]> => {
       const resolvedCandidates = await this.resolveAdaptiveProvider(ctx, type, id);
 
       return (await Promise.all(resolvedCandidates.map(candidate => this.inspectCandidate(ctx, candidate))))
         .filter((candidate): candidate is Candidate => candidate !== undefined);
     })();
-    const candidates = (await this.collectCandidates([...providerTasks, adaptiveProviderTask]))
+    let candidates = await this.collectCandidates([
+      ...this.createProviderTasks(ctx, tmdbId, preferredProviders),
+      adaptiveProviderTask,
+    ]);
+    if (!candidates.length) {
+      candidates = await this.collectCandidates(this.createProviderTasks(ctx, tmdbId, fallbackProviders));
+    }
+    candidates
       .sort((left, right) => this.compareCandidates(left, right));
 
     if (!candidates.length) {
@@ -199,6 +207,23 @@ export class Zeroth extends Source {
     });
 
     return results;
+  }
+
+  private createProviderTasks(
+    ctx: Context,
+    tmdbId: TmdbId,
+    providers: string[],
+  ): Promise<Candidate[]>[] {
+    return providers.map(async (provider): Promise<Candidate[]> => {
+      const resolvedCandidate = await this.resolveProvider(ctx, tmdbId, provider);
+      if (!resolvedCandidate) {
+        return [];
+      }
+
+      const candidate = await this.inspectCandidate(ctx, resolvedCandidate);
+
+      return candidate ? [candidate] : [];
+    });
   }
 
   private async resolveProvider(

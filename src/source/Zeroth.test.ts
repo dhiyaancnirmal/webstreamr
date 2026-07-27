@@ -233,6 +233,26 @@ describe('Zeroth', () => {
     }
   });
 
+  test('do not overload fallback providers when the preferred lane succeeds', async () => {
+    const json = jest.spyOn(fetcher, 'json')
+      .mockResolvedValueOnce({
+        '1embed': {},
+        'meowtv': {},
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        url: 'https://media.example.com/video/720/index.m3u8',
+      });
+    jest.spyOn(fetcher, 'text').mockResolvedValueOnce(stableVod);
+
+    const results = await source.handleInternal(ctx, 'movie', new TmdbId(550, undefined, undefined));
+
+    expect(results).toHaveLength(1);
+    expect(results[0]?.meta.displayLabel).toBe('Alpha');
+    expect(json).toHaveBeenCalledTimes(2);
+    expect(json.mock.calls[1]?.[1].searchParams.get('source')).toBe('meowtv');
+  });
+
   test('deduplicate same-height variants by bandwidth and ignore malformed entries', async () => {
     jest.spyOn(fetcher, 'json')
       .mockResolvedValueOnce({ provider: {} })
