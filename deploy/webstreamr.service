@@ -16,7 +16,10 @@ CacheDirectory=webstreamr
 ExecStart=/home/dhiyaan/src/webstreamr/deploy/start-tailscale.sh
 Restart=on-failure
 RestartSec=5
+UMask=0077
 
+CapabilityBoundingSet=
+LockPersonality=true
 NoNewPrivileges=true
 PrivateDevices=true
 PrivateTmp=true
@@ -27,10 +30,15 @@ ProtectHostname=true
 ProtectKernelLogs=true
 ProtectKernelModules=true
 ProtectKernelTunables=true
+ProtectProc=invisible
 ProtectSystem=strict
+ProcSubset=pid
+RemoveIPC=true
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 RestrictNamespaces=true
 RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallFilter=@system-service
 SystemCallArchitectures=native
 
 [Install]
