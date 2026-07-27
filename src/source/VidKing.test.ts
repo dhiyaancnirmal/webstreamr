@@ -66,6 +66,40 @@ describe('VidKing', () => {
     ]);
   });
 
+  test('keep multiple streams when VidKing does not expose a native adaptive playlist', async () => {
+    jest.spyOn(fetcher, 'json').mockResolvedValue({ title: 'Unknown layout' });
+    const fetchSources = jest.fn().mockResolvedValue({
+      sources: [
+        { quality: '1080', url: 'https://media.example.com/first.m3u8' },
+        { quality: '720', url: 'https://media.example.com/second.m3u8' },
+      ],
+    });
+    (source as unknown as { fetchSources: typeof fetchSources }).fetchSources = fetchSources;
+
+    const streams = await source.handleInternal(ctx, 'movie', new TmdbId(550, undefined, undefined));
+
+    expect(streams.map(stream => stream.url.href)).toEqual([
+      'https://media.example.com/first.m3u8',
+      'https://media.example.com/second.m3u8',
+    ]);
+  });
+
+  test('keep renditions when they do not share one native adaptive playlist', async () => {
+    jest.spyOn(fetcher, 'json').mockResolvedValue({ title: 'Different masters' });
+    const fetchSources = jest.fn().mockResolvedValue({
+      sources: [
+        { quality: '1080', url: 'https://media.example.com/first/index-s1080p-v1-a1.m3u8' },
+        { quality: '720', url: 'https://media.example.com/second/index-s720p-v1-a1.m3u8' },
+      ],
+    });
+    (source as unknown as { fetchSources: typeof fetchSources }).fetchSources = fetchSources;
+
+    const streams = await source.handleInternal(ctx, 'movie', new TmdbId(550, undefined, undefined));
+
+    expect(streams).toHaveLength(2);
+    expect(streams.every(stream => !stream.meta.adaptive)).toBe(true);
+  });
+
   test('throw after all servers fail', async () => {
     jest.spyOn(fetcher, 'json').mockResolvedValue({ title: 'Failure' });
     const error = new Error('All servers failed');

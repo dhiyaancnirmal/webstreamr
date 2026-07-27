@@ -21,13 +21,24 @@ export const buildManifest = (sources: Source[], extractors: Extractor[], config
     description: 'Provides HTTP URLs from streaming websites. Configure add-on for additional languages. Add MediaFlow proxy for more URLs.',
     resources: [
       'stream',
+      'catalog',
+      'meta',
     ],
     types: [
       'movie',
       'series',
+      'tv',
     ],
-    catalogs: [],
-    idPrefixes: ['tmdb:', 'tt'],
+    catalogs: [{
+      type: 'tv',
+      id: 'streamsports99',
+      name: 'Live TV · StreamSports99',
+      extra: [
+        { name: 'search' },
+        { name: 'skip' },
+      ],
+    }],
+    idPrefixes: ['tmdb:', 'tt', 'ss99:'],
     logo: 'https://emojiapi.dev/api/v1/spider_web/256.png',
     behaviorHints: {
       p2p: false,
@@ -122,7 +133,9 @@ export const buildManifest = (sources: Source[], extractors: Extractor[], config
 
   manifest.description += `\n\nSupported languages: ${languages.filter(language => language !== 'Multi').join(', ')}`;
   manifest.description += `\n\nSupported sources: ${sources.map(source => source.label).join(', ')}`;
-  manifest.description += `\n\nSupported extractors: ${extractors.map(extractor => extractor.label).join(', ')}`;
+  const extractorLabels = extractors.map(extractor => extractor.label).join(', ');
+  manifest.description += `\n\nSupported extractors:${extractorLabels ? ` ${extractorLabels}` : ''}`;
+  manifest.description += '\n\nLive TV: StreamSports99';
 
   return manifest;
 };

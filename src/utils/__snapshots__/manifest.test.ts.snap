@@ -7,7 +7,21 @@ exports[`buildManifest default manifest 1`] = `
     "configurationRequired": false,
     "p2p": false,
   },
-  "catalogs": [],
+  "catalogs": [
+    {
+      "extra": [
+        {
+          "name": "search",
+        },
+        {
+          "name": "skip",
+        },
+      ],
+      "id": "streamsports99",
+      "name": "Live TV · StreamSports99",
+      "type": "tv",
+    },
+  ],
   "config": [
     {
       "key": "multi",
@@ -153,16 +167,21 @@ Supported languages: Albanian, German, Castilian Spanish, French, Gujarati, Hind
 
 Supported sources: 4KHDHub, CineHDPlus, Cuevana, Einschalten, Eurostreaming, Frembed, FrenchCloud, HDHub4u, HomeCine, KinoGer, Kokoshka, MegaKino, MeineCloud, MostraGuarda, Movix, RgShows, StreamKiste, VerHdLink, VidKing, VidSrc, VixSrc
 
-Supported extractors: ",
+Supported extractors:
+
+Live TV: StreamSports99",
   "id": "webstreamr",
   "idPrefixes": [
     "tmdb:",
     "tt",
+    "ss99:",
   ],
   "logo": "https://emojiapi.dev/api/v1/spider_web/256.png",
   "name": "WebStreamr",
   "resources": [
     "stream",
+    "catalog",
+    "meta",
   ],
   "stremioAddonsConfig": {
     "issuer": "https://stremio-addons.net",
@@ -171,6 +190,7 @@ Supported extractors: ",
   "types": [
     "movie",
     "series",
+    "tv",
   ],
   "version": Any<String>,
 }

@@ -147,10 +147,9 @@ export class StreamResolver {
         // Remove duplicate URLs
         index === self.findIndex(t => t.url.href === urlResult.url.href),
       );
-    const combinedUrlResults = this.selectVidKingRendition(visibleUrlResults);
 
     streams.push(
-      ...combinedUrlResults
+      ...visibleUrlResults
         .map(urlResult => ({
           ...this.buildUrl(urlResult),
           name: this.buildName(ctx, urlResult),
@@ -177,25 +176,6 @@ export class StreamResolver {
 
   private arraysIntersect<T>(arr1: T[], arr2: T[]): boolean {
     return arr1.filter(item => arr2.includes(item)).length > 0;
-  }
-
-  private selectVidKingRendition(urlResults: UrlResult[]): UrlResult[] {
-    const variants = urlResults.filter(urlResult =>
-      urlResult.meta?.sourceId === 'vidking'
-      && urlResult.format === Format.hls
-      && !urlResult.error
-      && urlResult.meta.height,
-    );
-    if (variants.length < 2) {
-      return urlResults;
-    }
-
-    const selectedVariant = variants.find(variant => variant.meta?.height === 1080) ?? variants[0] as UrlResult;
-
-    return [
-      ...urlResults.filter(urlResult => !variants.includes(urlResult)),
-      selectedVariant,
-    ];
   }
 
   private determineTtl(urlResults: UrlResult[]): number | undefined {
@@ -226,7 +206,9 @@ export class StreamResolver {
       name += ` ${flagFromCountryCode(countryCode)}`;
     });
 
-    if (urlResult.meta?.height) {
+    if (urlResult.meta?.adaptive) {
+      name += ' Auto';
+    } else if (urlResult.meta?.height) {
       name += ` ${getClosestResolution(urlResult.meta.height)}`;
     }
 

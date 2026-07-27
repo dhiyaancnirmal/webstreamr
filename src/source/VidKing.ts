@@ -217,7 +217,7 @@ export class VidKing extends Source {
           });
 
         if (results.length) {
-          return results;
+          return this.useNativeAdaptivePlaylist(results);
         }
       } catch (error) {
         lastError = error;
@@ -230,6 +230,39 @@ export class VidKing extends Source {
 
     return [];
   };
+
+  private useNativeAdaptivePlaylist(results: SourceResult[]): SourceResult[] {
+    if (results.length < 2) {
+      return results;
+    }
+
+    const nativePlaylistUrls = results.map(({ url }) => {
+      if (/\/index-s\d+p-v\d+-a\d+\.m3u8$/i.test(url.pathname)) {
+        return new URL('master.m3u8', url);
+      }
+
+      if (/\/\d+p\/index\.m3u8$/i.test(url.pathname)) {
+        return new URL('../playlist.m3u8', url);
+      }
+
+      return undefined;
+    });
+    const nativePlaylistUrl = nativePlaylistUrls[0];
+    if (!nativePlaylistUrl || nativePlaylistUrls.some(url => url?.href !== nativePlaylistUrl.href)) {
+      return results;
+    }
+
+    const representative = results[0] as SourceResult;
+
+    return [{
+      url: nativePlaylistUrl,
+      meta: {
+        ...representative.meta,
+        adaptive: true,
+        height: undefined,
+      },
+    }];
+  }
 
   private async getTmdbId(ctx: Context, type: ContentType, id: Id): Promise<TmdbId> {
     if (id instanceof TmdbId) {

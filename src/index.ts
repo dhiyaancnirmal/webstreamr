@@ -6,9 +6,10 @@ import express, { NextFunction, Request, Response } from 'express';
 // eslint-disable-next-line import/no-named-as-default
 import rateLimit from 'express-rate-limit';
 import winston from 'winston';
-import { ConfigureController, ExtractController, ManifestController, StreamController } from './controller';
+import { ConfigureController, ExtractController, LiveTvController, ManifestController, StreamController } from './controller';
 import { BlockedError, logErrorAndReturnNiceString } from './error';
 import { createExtractors, ExtractorRegistry } from './extractor';
+import { StreamSports99 } from './live-tv';
 import { createSources, Source } from './source';
 import { HomeCine } from './source/HomeCine';
 import { MeineCloud } from './source/MeineCloud';
@@ -85,6 +86,7 @@ const extractorRegistry = new ExtractorRegistry(logger, extractors);
 addon.use('/', (new ExtractController(logger, fetcher, extractorRegistry)).router);
 addon.use('/', (new ConfigureController(sources, extractors)).router);
 addon.use('/', (new ManifestController(sources, extractors)).router);
+addon.use('/', (new LiveTvController(logger, new StreamSports99(fetcher))).router);
 
 const streamResolver = new StreamResolver(logger, extractorRegistry);
 addon.use('/', (new StreamController(logger, sources, streamResolver)).router);

@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`StreamSports99 list live channels and resolve a player stream 1`] = `
+{
+  "description": "Live television from StreamSports99 · US",
+  "id": "ss99:eyJuYW1lIjoiQUJDIiwiY29kZSI6InVzIn0",
+  "name": "ABC (US)",
+  "poster": "https://cdnlivetv.tv/api/v1/channels/images6318/united-states/abc.webp",
+  "posterShape": "square",
+  "type": "tv",
+}
+`;

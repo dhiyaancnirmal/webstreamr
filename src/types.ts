@@ -76,6 +76,7 @@ export enum BlockedReason {
 }
 
 export interface Meta {
+  adaptive?: boolean | undefined;
   bytes?: number | undefined;
   countryCodes?: CountryCode[];
   extractorId?: string | undefined;
