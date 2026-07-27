@@ -18,11 +18,16 @@ exports[`Hls source-declared playlist without a file extension 1`] = `
 [
   {
     "format": "hls",
-    "label": "media.example.com",
+    "label": "Alpha",
     "meta": {
       "adaptive": true,
+      "displayLabel": "Alpha",
       "extractorId": "hls",
       "format": "hls",
+      "referer": "https://source.example.com/",
+    },
+    "requestHeaders": {
+      "Referer": "https://source.example.com/",
     },
     "ttl": 600000,
     "url": "https://media.example.com/api/proxy/hls",

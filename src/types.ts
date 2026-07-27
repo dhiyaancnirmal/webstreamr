@@ -79,6 +79,7 @@ export interface Meta {
   adaptive?: boolean | undefined;
   bytes?: number | undefined;
   countryCodes?: CountryCode[];
+  displayLabel?: string | undefined;
   extractorId?: string | undefined;
   format?: Format | undefined;
   height?: number | undefined;

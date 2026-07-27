@@ -22,20 +22,21 @@ import { VidKing } from './VidKing';
 import { VidSrc } from './VidSrc';
 import { Vidsuper } from './Vidsuper';
 import { VixSrc } from './VixSrc';
-import { Vyla } from './Vyla';
+import { Zeroth } from './Zeroth';
 
 export * from './Source';
 
 export const createSources = (fetcher: Fetcher): Source[] => {
   const disabledSources = envGet('DISABLED_SOURCES')?.split(',') ?? [];
-  const vylaBaseUrl = envGet('VYLA_BASE_URL');
+  const zerothResolverUrl = envGet('ZEROTH_RESOLVER_URL');
 
   return [
     // multi
     new FourKHDHub(fetcher),
     new HDHub4u(fetcher),
-    new VidKing(fetcher),
-    ...(vylaBaseUrl ? [new Vyla(fetcher, vylaBaseUrl)] : [new Vidsuper(fetcher)]),
+    ...(zerothResolverUrl
+      ? [new Zeroth(fetcher, zerothResolverUrl)]
+      : [new VidKing(fetcher), new Vidsuper(fetcher)]),
     new VixSrc(fetcher),
     new VidSrc(),
     new RgShows(fetcher),

@@ -427,6 +427,11 @@ exports[`resolve returns the native adaptive VidKing playlist 1`] = `
     "behaviorHints": {
       "bingeGroup": "webstreamr-vidking-hls-multi",
       "notWebReady": true,
+      "proxyHeaders": {
+        "request": {
+          "Referer": "https://www.vidking.net/",
+        },
+      },
     },
     "name": "WebStreamr 🌐 Auto",
     "title": "Fight Club (1999) · Yoru

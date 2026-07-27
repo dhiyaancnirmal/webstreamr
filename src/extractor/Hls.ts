@@ -16,8 +16,13 @@ export class Hls extends Extractor {
     return [{
       url,
       format: Format.hls,
-      label: url.host,
+      label: meta.displayLabel ?? url.host,
       meta,
+      ...(meta.referer && {
+        requestHeaders: {
+          Referer: meta.referer,
+        },
+      }),
     }];
   };
 }

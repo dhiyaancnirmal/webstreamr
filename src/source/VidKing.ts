@@ -211,6 +211,7 @@ export class VidKing extends Source {
               meta: {
                 countryCodes: [CountryCode.multi],
                 ...(!isNaN(height) && { height }),
+                referer: `${this.baseUrl}/`,
                 title: `${title}${tmdbId.season ? ` ${tmdbId.formatSeasonAndEpisode()}` : year ? ` (${year})` : ''} · ${server.name}`,
               },
             };

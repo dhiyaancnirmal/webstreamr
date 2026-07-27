@@ -60,6 +60,7 @@ describe('VidKing', () => {
         url: new URL('https://media.example.com/video.m3u8'),
         meta: {
           countryCodes: ['multi'],
+          referer: 'https://www.vidking.net/',
           title: 'No Date · Breach',
         },
       },

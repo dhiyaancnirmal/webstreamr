@@ -19,7 +19,12 @@ describe('Hls', () => {
     expect(await extractorRegistry.handle(
       ctx,
       new URL('https://media.example.com/api/proxy/hls'),
-      { adaptive: true, format: Format.hls },
+      {
+        adaptive: true,
+        displayLabel: 'Alpha',
+        format: Format.hls,
+        referer: 'https://source.example.com/',
+      },
     )).toMatchSnapshot();
   });
 });

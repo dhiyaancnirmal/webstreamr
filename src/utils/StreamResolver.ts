@@ -121,6 +121,11 @@ export class StreamResolver {
         return a.isExternal ? 1 : -1;
       }
 
+      const adaptiveComparison = Number(b.meta?.adaptive ?? false) - Number(a.meta?.adaptive ?? false);
+      if (adaptiveComparison !== 0) {
+        return adaptiveComparison;
+      }
+
       const heightComparison = (b.meta?.height ?? 0) - (a.meta?.height ?? 0);
       if (heightComparison !== 0) {
         return heightComparison;

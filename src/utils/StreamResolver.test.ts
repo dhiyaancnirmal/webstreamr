@@ -117,6 +117,44 @@ describe('resolve', () => {
     expect(streams.streams).toMatchSnapshot();
   });
 
+  test('sorts an adaptive stream before fixed-quality streams', async () => {
+    class AdaptiveSource extends Source {
+      public readonly id = 'adaptive-sort-source';
+
+      public readonly label = 'Adaptive';
+
+      public readonly contentTypes: ContentType[] = ['movie'];
+
+      public readonly countryCodes: CountryCode[] = [CountryCode.multi];
+
+      public readonly baseUrl = 'https://media.example.com';
+
+      public readonly handleInternal = async (): Promise<SourceResult[]> => [
+        {
+          url: new URL('https://media.example.com/2160.m3u8'),
+          meta: { countryCodes: [CountryCode.multi], height: 2160 },
+        },
+        {
+          url: new URL('https://media.example.com/master.m3u8'),
+          meta: { adaptive: true, countryCodes: [CountryCode.multi], height: 1080 },
+        },
+      ];
+    }
+
+    const streamResolver = new StreamResolver(logger, new ExtractorRegistry(logger, [new Hls(fetcher)]));
+    const result = await streamResolver.resolve(
+      createTestContext({ multi: 'on' }),
+      [new AdaptiveSource()],
+      'movie',
+      new TmdbId(550, undefined, undefined),
+    );
+
+    expect(result.streams.map(stream => stream.name)).toEqual([
+      'WebStreamr 🌐 Auto',
+      'WebStreamr 🌐 2160p',
+    ]);
+  });
+
   test('adds error info', async () => {
     class MockSource extends Source {
       public readonly id = 'mocksource';
