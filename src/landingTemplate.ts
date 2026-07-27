@@ -73,35 +73,6 @@ a {
   color: white
 }
 
-a.install-link {
-  text-decoration: none
-}
-
-button {
-  border: 0;
-  outline: 0;
-  color: white;
-  background: #8A5AAB;
-  padding: 1.2vh 3.5vh;
-  margin: auto;
-  text-align: center;
-  font-family: 'Open Sans', Arial, sans-serif;
-  font-size: 2.2vh;
-  font-weight: 600;
-  cursor: pointer;
-  display: block;
-  box-shadow: 0 0.5vh 1vh rgba(0, 0, 0, 0.2);
-  transition: box-shadow 0.1s ease-in-out;
-}
-
-button:hover {
-  box-shadow: none;
-}
-
-button:active {
-  box-shadow: 0 0 0 0.5vh white inset;
-}
-
 #addon {
   width: 40vh;
   margin: auto;
@@ -166,6 +137,11 @@ button:active {
 
 .full-width {
   width: 100%;
+}
+
+#manifestUrl {
+  font-family: monospace;
+  font-size: 1.5vh;
 }
 `;
 
@@ -233,13 +209,11 @@ export function landingTemplate(manifest: CustomManifest) {
       <div class="separator"></div>
       `;
       script += `
-      installLink.onclick = () => {
-        return mainForm.reportValidity()
-      }
+      const mainForm = document.getElementById('mainForm')
       const updateLink = () => {
         const config = Object.fromEntries(new FormData(mainForm))
         config.mediaFlowProxyUrl = config.mediaFlowProxyUrl.replace(/^https?.\\/\\//, '');
-        installLink.href = 'stremio://' + window.location.host + '/' + encodeURIComponent(JSON.stringify(config)) + '/manifest.json'
+        manifestUrl.value = window.location.origin + '/' + encodeURIComponent(JSON.stringify(config)) + '/manifest.json'
       }
       mainForm.onchange = updateLink
       `;
@@ -296,18 +270,22 @@ export function landingTemplate(manifest: CustomManifest) {
 
       ${formHTML}
 
-      <a id="installLink" class="install-link" href="#">
-      <button name="Install">INSTALL</button>
-      </a>
+      <div class="form-element">
+        <label for="manifestUrl">
+          <div class="label-to-top">Manifest URL</div>
+        </label>
+        <input type="text" id="manifestUrl" class="full-width" readonly>
+      </div>
       ${contactHTML}
     </div>
     <script>
+      const manifestUrl = document.getElementById('manifestUrl')
       ${script}
 
       if (typeof updateLink === 'function')
       updateLink()
       else
-      installLink.href = 'stremio://' + window.location.host + '/manifest.json'
+      manifestUrl.value = window.location.origin + '/manifest.json'
     </script>
   </body>
 
