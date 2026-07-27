@@ -1,0 +1,14 @@
+[Unit]
+Description=Private HTTPS proxy for the WebStreamr Stremio add-on
+After=network-online.target tailscaled.service webstreamr.service
+Wants=network-online.target
+Requires=tailscaled.service webstreamr.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/tailscale serve --bg --yes --https=443 http://100.68.120.78:51546
+ExecStop=/usr/bin/tailscale serve --https=443 off
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
